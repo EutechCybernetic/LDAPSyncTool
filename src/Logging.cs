@@ -12,7 +12,7 @@ namespace LDAPSyncTool
             if (level >= LogLevel)
             {
                 var formattedMessage = string.Format(message, args);
-                
+
                 var logLevelFormatted = level switch 
                 {
                     0 => "DEBUG",
@@ -47,6 +47,24 @@ namespace LDAPSyncTool
         public static void Fatal(string message, params object[] args)
         {
             logEntry(4, message, args);
+        }
+        public static void Exception(Exception ex)
+        {
+            var messageBuilder = new System.Text.StringBuilder();
+            
+
+            var exception = ex;
+            while(exception != null)
+            {
+                messageBuilder.AppendLine(exception.Message);
+                var trace = exception.StackTrace;
+                if (trace != null)
+                {
+                    messageBuilder.AppendLine(trace);
+                }
+                exception = exception.InnerException;
+            }
+            Error(messageBuilder.ToString());
         }
 
 

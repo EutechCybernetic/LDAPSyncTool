@@ -1,5 +1,4 @@
 ﻿using System;
-using Novell.Directory.Ldap;
 using System.Collections.Generic;
 using CommandLine;
 
@@ -19,17 +18,28 @@ namespace LDAPSyncTool
 
         static void Run(Options o)
         {
-            if (o.Verbose)
+            try
             {
-                Log.LogLevel = 0;
+                 
+                Log.LogLevel = o.Verbose ? 0 : 1;
+                var configFile = string.IsNullOrWhiteSpace(o.ConfigFile)? GetDefaultConfigFile() : o.ConfigFile;
+
+                Log.Debug($"Using configuration file: {configFile}");
+
+                var config = ConfigParser.Parse(configFile);
+
+                Log.Info($"Server: {config.ldap.Server}");
+                Log.Info($"User: {config.ldap.User}");
+                Log.Info($"Query: {config.ldap.Query}");
+                Log.Info($"iviva Url: {config.iviva.Url}");
+                Log.Info($"Page Size: {config.pageSize}");
+                Log.Info($"Attributes: {config.ldap.Attributes}");
             }
-            else
+            catch (System.Exception exp)
             {
-                Log.LogLevel = 1;
+                Log.Exception(exp);
             }
 
-            var configFile = string.IsNullOrWhiteSpace(o.ConfigFile)? GetDefaultConfigFile() : o.ConfigFile;
-            Log.Debug($"Using configuration file: {configFile}");
         }
         static void Main(string[] args)
         {
