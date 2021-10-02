@@ -1,6 +1,7 @@
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.IO;
+using System.Collections.Generic;
 namespace LDAPSyncTool 
 {
     public class Config
@@ -15,7 +16,8 @@ namespace LDAPSyncTool
         public string User { get; set; }
         public string Password { get; set; }
         public string Query { get; set; }
-        public string[] Attributes { get; set; }
+        public Dictionary<string,string> Attributes { get; set; }
+        public string Dn {get;set;}
     }
     public class IVIVAConfig
     {
