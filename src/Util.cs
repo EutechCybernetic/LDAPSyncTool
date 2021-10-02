@@ -9,5 +9,9 @@ namespace LDAPSyncTool
         {
             return string.Join(delim, source.ToArray());
         }
+        public static string ToJson(this IDictionary<string,object> source)
+        {
+            return System.Text.Json.JsonSerializer.Serialize(source);
+        }
     }
 }

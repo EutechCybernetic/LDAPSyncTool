@@ -1,0 +1,12 @@
+ldap:
+    server: ldap.myserver.com
+    dn: "o=orgunitabc,dc=myorg,dc=com"
+    user: "uid=snow,ou=Users,o=orgunitabc,dc=myorg,dc=com"
+    password: sssshhhhh
+    query: "(objectclass=*)"
+    attributes:
+        mail: Email
+        displayName: LoginID
+iviva:
+    url: https://iviva
+    apiKey: SC123:234

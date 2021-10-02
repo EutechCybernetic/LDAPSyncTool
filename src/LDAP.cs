@@ -23,9 +23,11 @@ namespace LDAPSyncTool
             {
                 cn.Connect(server, 389);
                 cn.Bind(uid,pwd);
-                Log.Info("Connected");
-                Console.WriteLine(this.Configuration.Attributes.Keys.StringJoin(","));
+
+                Log.Debug("Connected");
+
                 var lr = cn.Search(cs, LdapConnection.ScopeSub, this.Configuration.Query, this.Configuration.Attributes.Keys.ToArray(), false);
+                
                 while (lr.HasMore())
                 {
 
@@ -54,7 +56,7 @@ namespace LDAPSyncTool
                     }
                     else
                     {
-                        Log.Warn("Invalid entry: {0} {1}",entry.Dn ,System.Text.Json.JsonSerializer.Serialize(user));
+                        Log.Debug("Invalid entry: {0} {1}",entry.Dn ,user.ToJson());
                     }
                 }
                 yield break;

@@ -11,7 +11,7 @@ namespace LDAPSyncTool
         {
             if (level >= LogLevel)
             {
-                var formattedMessage = string.Format(message, args);
+                var formattedMessage = args.Length>0 ?  string.Format(message, args) : message;
 
                 var logLevelFormatted = level switch 
                 {
