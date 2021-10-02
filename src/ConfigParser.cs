@@ -18,6 +18,7 @@ namespace LDAPSyncTool
         public string Query { get; set; }
         public Dictionary<string,string> Attributes { get; set; }
         public string Dn {get;set;}
+        public bool GetAllAttributes {get;set;}
     }
     public class IVIVAConfig
     {

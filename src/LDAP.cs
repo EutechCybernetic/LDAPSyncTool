@@ -11,6 +11,16 @@ namespace LDAPSyncTool
         {
             this.Configuration = config;
         }
+        private static string getEntryAsString(LdapEntry entry)
+        {
+            var attrs = entry.GetAttributeSet();
+            var result = new Dictionary<string, object>();
+            foreach(var attr in attrs)
+            {
+                result[attr.Name] = attr.StringValue;
+            }
+            return result.ToJson();
+        }
         public IEnumerable<IDictionary<string,object>> Query()
         {
             var server  = this.Configuration.Server;
@@ -19,6 +29,8 @@ namespace LDAPSyncTool
 
             var cs = this.Configuration.Dn;
             var attrs = this.Configuration.Attributes;
+            string[] attrList = this.Configuration.GetAllAttributes ? null : this.Configuration.Attributes.Keys.ToArray();
+           
             using (var cn = new LdapConnection())
             {
                 cn.Connect(server, 389);
@@ -26,13 +38,14 @@ namespace LDAPSyncTool
 
                 Log.Debug("Connected");
 
-                var lr = cn.Search(cs, LdapConnection.ScopeSub, this.Configuration.Query, this.Configuration.Attributes.Keys.ToArray(), false);
-                
+                var lr = cn.Search(cs, LdapConnection.ScopeSub, this.Configuration.Query, attrList, false);
+
                 while (lr.HasMore())
                 {
 
                     var entry = lr.Next();
                     var entrySet = entry.GetAttributeSet();
+                    Log.Debug("Entry: {0}", getEntryAsString(entry));
                     var user = new Dictionary<string,object>(StringComparer.CurrentCultureIgnoreCase);
                     var isValidEntry = false;
                     foreach (var kvp in attrs)
@@ -43,10 +56,10 @@ namespace LDAPSyncTool
                         }
                         var ea = entrySet[kvp.Key];
                         if (ea == null) continue;
-                        user[kvp.Key] = ea.StringValue;
+                        user[kvp.Value] = ea.StringValue;
                         if (string.IsNullOrEmpty(ea.StringValue) && ea.ByteValue.Length!=0)
                         {
-                             user[kvp.Key] = ea.ByteValue;
+                             user[kvp.Value] = ea.ByteValue;
                         }
                         isValidEntry = true;
                     }

@@ -38,7 +38,7 @@ namespace LDAPSyncTool
         }
 
 
-        static void SyncUsers(IList<IDictionary<string,object>> users, Config config, Options options)
+        static void SyncUsers(IList<IDictionary<string,object>> users,string session, Config config, Options options)
         {
             if (options.SimulationMode)
             {
@@ -52,7 +52,7 @@ namespace LDAPSyncTool
 
             Log.Info($"Sending {users.Count} users to {config.iviva.Url} using {config.iviva.ApiKey}" );
             var app = new iviva(config.iviva);
-            var result = app.Execute($"{Constants.IVIVA_SYNC_SERVICE}", users);
+            var result = app.Execute($"{Constants.IVIVA_SYNC_SERVICE}", new {session=session,users=users});
 
         }
 
@@ -90,7 +90,7 @@ namespace LDAPSyncTool
                     userBatch.Add(user);
                     if (userBatch.Count >= config.pageSize)
                     {
-                        SyncUsers(userBatch, config,options);
+                        SyncUsers(userBatch, sessionID,config,options);
                         userBatch.Clear();
                     }
                 }
@@ -99,13 +99,13 @@ namespace LDAPSyncTool
 
                 if (userBatch.Count > 0)
                 {
-                    SyncUsers(userBatch, config,options);
+                    SyncUsers(userBatch, sessionID, config,options);
                 }
 
                 if (!options.SimulationMode)
                 {
                     var app = new iviva(config.iviva);
-                    var result = app.Execute($"{Constants.IVIVA_STOP_SYNC_SERVICE}", new Dictionary<string, object>() { { "sessionID", sessionID } });
+                    var result = app.Execute($"{Constants.IVIVA_STOP_SYNC_SERVICE}", new Dictionary<string, object>() { { "session", sessionID } });
                 }
             }
             catch (System.Exception exp)

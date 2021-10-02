@@ -29,6 +29,7 @@ ldap:
     user: "uid=snow,ou=Users,o=orgunitabc,dc=myorg,dc=com"
     password: sssshhhhh
     query: "(objectclass=*)"
+    getAllAttributes: false
     attributes:
         mail: Email
         displayName: LoginID
@@ -55,6 +56,8 @@ The password to use to connect to the server
 ### ldap.query
 The actual LDAP query to issue to fetch the required users. This query must return all users that need to be synced with iviva
 
+### ldap.getAllAttributes
+When set to true, the query will return all attributes that each user has, regardless of what has been configured in the `attributes` dictionary
 ### ldap.attributes
 This is a dictionary mapping LDAP attributes to the corresponding iviva attributes.
 Note that `userAccountControl` is always added and you should not have to explicitly map it here.
