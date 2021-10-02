@@ -42,12 +42,18 @@ namespace LDAPSyncTool
         {
             if (options.SimulationMode)
             {
-                Log.Info($"Sending {users.Count} users to {config.iviva.Url} using {config.iviva.ApiKey}" );
+                Log.Info($"Simulating sending {users.Count} users to {config.iviva.Url} using {config.iviva.ApiKey}" );
                 foreach(var user in users)
                 {
                     Log.Info("\t=>"+user.ToJson());
                 }
+                return;
             }
+
+            Log.Info($"Sending {users.Count} users to {config.iviva.Url} using {config.iviva.ApiKey}" );
+            var app = new iviva(config.iviva);
+            var result = app.Execute($"{Constants.IVIVA_SYNC_SERVICE}", users);
+
         }
 
         static void Run(Options options)
@@ -94,6 +100,12 @@ namespace LDAPSyncTool
                 if (userBatch.Count > 0)
                 {
                     SyncUsers(userBatch, config,options);
+                }
+
+                if (!options.SimulationMode)
+                {
+                    var app = new iviva(config.iviva);
+                    var result = app.Execute($"{Constants.IVIVA_STOP_SYNC_SERVICE}", new Dictionary<string, object>() { { "sessionID", sessionID } });
                 }
             }
             catch (System.Exception exp)

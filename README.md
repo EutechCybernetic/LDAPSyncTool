@@ -116,7 +116,10 @@ You can redirect them to a file as required.
 You can use the `-v` or `--verbose` command to log extra information for debugging purposes.
 
 ## Building the code
+### Prerequisites
+You need .NET 5 SDK
 
+### Building
 Clone this repository and run `dotnet publish -c Release --self-contained -r win10-x64 -o <directory-to-publish-to>`
 
 This will create a folder with the `LDAPSyncTool.exe` executable inside it.
