@@ -6,6 +6,111 @@ This tool is meant to be run within the network where Active Directory is hosted
 
 This tool is non-interactive and designed to run on a scheduled task.
 
+## Prerequisites
+The following information is required to use this tool:
+
+* `LDAP Server Address` - The ip/host of the active directory or LDAP server to connect to
+* `LDAP User` - A user name for connecting to the LDAP server. This will likely be a fully qualified name like "uid=snow,ou=Users,o=orgunitabc,dc=myorg,dc=com"
+* `LDAP Password` - The password for the user name specified
+* `LDAP Base DN` - An expression that specifies the base domain name to use for querying for users. Example: `o=org,dc=mydc,dc=com`
+* `LDAP Query` - This is the LDAP query to be issued to retrieve all the users from the directory. This query must be crafted to include all the users that need to be synced. Example: `(objectclass=*)`. This retrieves all users who have a objectclass attribute
+* `Attributes` - A list of attributes to retrieve for each user, and the corresponding attribute within iviva to map this user to. Consult your iviva contact or documentation for available attributes to configure
+* `iviva Url` - The url of the iviva application that user data is supposed to be synced to. 
+* `iviva Api Key` - The api key used to connect to iviva. You will need to have an API Key issued to you.
+
 ## Configuration
+The configuration used by this tool will be read from a YAML file.
+The structure of the yaml file is as follows:
+
+```
+ldap:
+    server: ldap.myserver.com
+    dn: "o=orgunitabc,dc=myorg,dc=com"
+    user: "uid=snow,ou=Users,o=orgunitabc,dc=myorg,dc=com"
+    password: sssshhhhh
+    query: "(objectclass=*)"
+    attributes:
+        mail: Email
+        displayName: LoginID
+iviva:
+    url: https://iviva
+    apiKey: SC123:234
+
+```
+
+Here's what these represent:
+
+### ldap.server
+The host/ip of the server to connect to for LDAP or active directory.
+
+### ldap.dn
+The BaseDN that will be used to search for users.
+
+### ldap.user
+The user name to use to connect to LDAP. This will probably have to be a fully qualified expression like `uid=snow,ou=Users,o=orgunitabc,dc=myorg,dc=com`
+
+### ldap.password
+The password to use to connect to the server
+
+### ldap.query
+The actual LDAP query to issue to fetch the required users. This query must return all users that need to be synced with iviva
+
+### ldap.attributes
+This is a dictionary mapping LDAP attributes to the corresponding iviva attributes.
+Note that `userAccountControl` is always added and you should not have to explicitly map it here.
+
+At the minimum, iviva expects these attributes:
+* LoginID
+* Email
+* FirstName
+
+So these 3 need to be mapped to corresponding attributes in ldap.
+
+An example:
+
+```
+attributes:
+    mail: Email
+    displayName: FirstName
+    sAMAccountName: LoginID
+```
+
+This maps the LDAP attribute `mail` to the iviva attribute `Email`.
+The ldap `sAMAAccountName` is the iviva user's LoginID.
+
+### iviva.url
+The full https url of the iviva application to sync users to.
+
+Example: `https://foo.iviva.cloud`
+
+### iviva.apikey
+The api key to use to talk to the iviva api
+
 
 ## Usage
+
+To run the tool, specify the path to the configuration file using the `-c` parameter.
+
+```
+.\LDAPSyncTool.exe -c  e:\ldap.yaml
+```
+
+### Simulation Mode
+You can run the tool in simulation mode - meaning it will query the LDAP/active directory server but not actually send the data to iviva.
+It will log it on the console.
+
+Use the `-s` or `--simulation-mode` command line switch for that:
+
+```
+.\LDAPSyncTool.exe -c e:\ldap.yaml --simulation-mode
+```
+
+
+## Command Line Options
+You can run the tool with the `--help` option to see available command line parameters.
+
+## Logging
+Currently all log entries are logged to the console (ie, `stdout`).
+You can redirect them to a file as required.
+
+You can use the `-v` or `--verbose` command to log extra information for debugging purposes.
