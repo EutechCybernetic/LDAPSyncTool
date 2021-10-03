@@ -80,7 +80,7 @@ namespace LDAPSyncTool
 
                 var sessionID = System.Guid.NewGuid().ToString();
 
-                Log.Info($"Creating new session: ${sessionID}");
+                Log.Info($"Creating new session: {sessionID}");
 
                 
                 
