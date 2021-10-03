@@ -16,7 +16,7 @@ The following information is required to use this tool:
 * `LDAP Query` - This is the LDAP query to be issued to retrieve all the users from the directory. This query must be crafted to include all the users that need to be synced. Example: `(objectclass=*)`. This retrieves all users who have a objectclass attribute
 * `Attributes` - A list of attributes to retrieve for each user, and the corresponding attribute within iviva to map this user to. Consult your iviva contact or documentation for available attributes to configure
 * `iviva Url` - The url of the iviva application that user data is supposed to be synced to. 
-* `iviva Api Key` - The api key used to connect to iviva. You will need to have an API Key issued to you.
+* `iviva Api Key` - The api key used to connect to iviva. You will need to have an API Key issued to you. The API Key should have the `cansyncldapexternal` app role. (In the user roles configuration UI in iviva, look for "Allowed to run an external LDAP sync tool")
 
 ## Configuration
 The configuration used by this tool will be read from a YAML file.
