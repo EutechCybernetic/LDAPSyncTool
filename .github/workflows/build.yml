@@ -1,0 +1,39 @@
+name: Build Process
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.301
+ 
+    - name: Install dependencies
+      run: dotnet restore
+      
+    - name: Build Windows
+      run: dotnet publish -c Release --self-contained -r win10-x64
+      
+    - name: Build Linux
+      run: dotnet publish -c Release --self-contained -r linux-x64
+
+    - name: LDAPSyncTool-win10-x64
+      uses: actions/upload-artifact@v2
+      with:
+        name: LDAPSyncTool-win10-x64
+        path: /home/runner/work/LDAPSync/bin/Release/net5.0/win10-x64/
+        
+    - name: LDAPSyncTool-linux-x64
+      uses: actions/upload-artifact@v2
+      with:
+        name: LDAPSyncTool-linux-x64
+        path: /home/runner/work/LDAPSync/bin/Release/net5.0/linux-x64/
