@@ -58,6 +58,7 @@ namespace LDAPSyncTool
 
         static void Run(Options options)
         {
+            List<string> errors = new List<string>();
             try
             {
                  
@@ -90,7 +91,15 @@ namespace LDAPSyncTool
                     userBatch.Add(user);
                     if (userBatch.Count >= config.pageSize)
                     {
-                        SyncUsers(userBatch, sessionID,config,options);
+                        try
+                        {
+                            SyncUsers(userBatch, sessionID,config,options);
+                        }
+                        catch(Exception exp)
+                        {
+                            Log.Exception(exp);
+                            errors.Add(exp.Message);
+                        }
                         userBatch.Clear();
                     }
                 }
@@ -99,14 +108,47 @@ namespace LDAPSyncTool
 
                 if (userBatch.Count > 0)
                 {
-                    SyncUsers(userBatch, sessionID, config,options);
+
+                    try
+                    {
+                        SyncUsers(userBatch, sessionID, config, options);
+                    }
+                    catch (Exception exp)
+                    {
+                        Log.Exception(exp);
+                        errors.Add(exp.Message);
+                    }
                 }
+
 
                 if (!options.SimulationMode)
                 {
-                    var app = new iviva(config.iviva);
-                    var result = app.Execute($"{Constants.IVIVA_STOP_SYNC_SERVICE}", new Dictionary<string, object>() { { "session", sessionID } });
+                    if (errors.Count > 0)
+                    {
+                        Log.Info("One or more errors occurre while syncing. Skipping the sync termination process");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var app = new iviva(config.iviva);
+                            var result = app.Execute($"{Constants.IVIVA_STOP_SYNC_SERVICE}", new Dictionary<string, object>() { { "session", sessionID } });
+                        }
+                        catch (Exception exp)
+                        {
+                            Log.Exception(exp);
+                            errors.Add(exp.Message);
+                        }
+                    }
                 }
+
+
+                if (errors.Count > 0)
+                {
+                    var messages = errors.StringJoin("\n");
+                    throw new Exception(messages);
+                }
+                
             }
             catch (System.Exception exp)
             {
