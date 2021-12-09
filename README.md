@@ -51,7 +51,9 @@ The BaseDN that will be used to search for users.
 The user name to use to connect to LDAP. This will probably have to be a fully qualified expression like `uid=snow,ou=Users,o=orgunitabc,dc=myorg,dc=com`
 
 ### ldap.password
-The password to use to connect to the server
+The password to use to connect to the server. Instead of setting it here - you can override it with an environment variable called `LDAP_SYNC_TOOL_PASSWORD`
+
+The environment variable takes precedence over what is configured here.
 
 ### ldap.query
 The actual LDAP query to issue to fetch the required users. This query must return all users that need to be synced with iviva

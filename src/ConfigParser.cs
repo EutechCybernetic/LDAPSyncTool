@@ -31,7 +31,14 @@ namespace LDAPSyncTool
         public static Config Parse(string path)
         {
             var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
-            return deserializer.Deserialize<Config>(File.ReadAllText(path));
+            var config = deserializer.Deserialize<Config>(File.ReadAllText(path));
+            var passwordOverride = (System.Environment.GetEnvironmentVariable("LDAP_SYNC_TOOL_PASSWORD"));
+            if (!string.IsNullOrWhiteSpace(passwordOverride))
+            {
+                config.ldap.Password = passwordOverride;
+                Log.Info("Overriding password from configuration with LDAP_SYNC_TOOL_PASSWORD env");
+            }
+            return config;
 
         }
     }
