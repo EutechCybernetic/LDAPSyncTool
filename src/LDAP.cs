@@ -26,6 +26,13 @@ namespace LDAPSyncTool
             var server  = this.Configuration.Server;
             var uid = this.Configuration.User;
             var pwd = this.Configuration.Password;
+            var batchSize = this.Configuration.BatchSize;
+            if (batchSize < 1) {
+                Log.Debug("Defaulting to batch size of {0}",1000);
+                batchSize =1000;
+            }
+
+            //TODO: use batch size
 
             var cs = this.Configuration.Dn;
             var attrs = this.Configuration.Attributes;
@@ -37,7 +44,9 @@ namespace LDAPSyncTool
                 cn.Bind(uid,pwd);
 
                 Log.Debug("Connected");
-
+                var sc = cn.SearchConstraints;
+                sc.BatchSize = batchSize;
+                Log.Debug("Using batch size: {0}",batchSize);
                 var lr = cn.Search(cs, LdapConnection.ScopeSub, this.Configuration.Query, attrList, false);
 
                 while (lr.HasMore())

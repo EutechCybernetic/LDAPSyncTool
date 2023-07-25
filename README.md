@@ -30,6 +30,7 @@ ldap:
     password: sssshhhhh
     query: "(objectclass=*)"
     getAllAttributes: false
+    batchSize: 100
     attributes:
         mail: Email
         displayName: LoginID
@@ -57,9 +58,13 @@ The environment variable takes precedence over what is configured here.
 
 ### ldap.query
 The actual LDAP query to issue to fetch the required users. This query must return all users that need to be synced with iviva
+### ldap.batchSize
+When set, limits the number of items that get fetched on each query.
+Multiple queries will be made until all items are recovered
 
 ### ldap.getAllAttributes
 When set to true, the query will return all attributes that each user has, regardless of what has been configured in the `attributes` dictionary
+
 ### ldap.attributes
 This is a dictionary mapping LDAP attributes to the corresponding iviva attributes.
 Note that `userAccountControl` is always added and you should not have to explicitly map it here.
@@ -122,7 +127,7 @@ You can use the `-v` or `--verbose` command to log extra information for debuggi
 
 ## Building the code
 ### Prerequisites
-You need .NET 5 SDK
+You need .NET 6 SDK
 
 ### Building
 Clone this repository and run `dotnet publish -c Release --self-contained -r win10-x64 -o <directory-to-publish-to>`

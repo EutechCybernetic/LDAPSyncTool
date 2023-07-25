@@ -19,6 +19,7 @@ namespace LDAPSyncTool
         public Dictionary<string,string> Attributes { get; set; }
         public string Dn {get;set;}
         public bool GetAllAttributes {get;set;}
+        public int BatchSize {get;set;}
     }
     public class IVIVAConfig
     {
