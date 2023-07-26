@@ -2,76 +2,127 @@ using System;
 using Novell.Directory.Ldap;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+
 namespace LDAPSyncTool
 {
     public class LDAP
     {
         private LDAPConfig Configuration {get;set;}
+        static Regex LDAPServerRegex = new Regex(@"^(ldap(?:s)?://)?(?<host>[^:/]+)(?::(?<port>\d+))?$", RegexOptions.IgnoreCase);
+        bool _IsSecured = false;
+        string _Host = null;
+        int _Port = 0;
         public LDAP(LDAPConfig config)
         {
             this.Configuration = config;
+
+            ParseLDAPServerAddress(this.Configuration.Server, out this._IsSecured, out this._Host, out this._Port);
         }
+
         private static string getEntryAsString(LdapEntry entry)
         {
             var attrs = entry.GetAttributeSet();
             var result = new Dictionary<string, object>();
+
             foreach(var attr in attrs)
             {
                 result[attr.Name] = attr.StringValue;
             }
+
             return result.ToJson();
         }
+
+        static void ParseLDAPServerAddress(string addr, out bool isSecured, out string host, out int port) {
+            isSecured = false;
+            host = null;
+            port = 0;
+
+            var match = LDAPServerRegex.Match(addr);
+
+            if (match.Success) {
+                isSecured = match.Groups[1].Value == "ldaps://";
+                host = !string.IsNullOrWhiteSpace(match.Groups["host"].Value)
+                    ?
+                    match.Groups["host"].Value
+                    :
+                    "localhost";
+                port = !string.IsNullOrWhiteSpace(match.Groups["port"].Value)
+                        && int.TryParse(match.Groups["port"].Value, out int _port)
+                    ? 
+                    _port
+                    :
+                    389;
+            }
+        }
+
         public IEnumerable<IDictionary<string,object>> Query()
         {
-            var server  = this.Configuration.Server;
             var uid = this.Configuration.User;
             var pwd = this.Configuration.Password;
             var batchSize = this.Configuration.BatchSize;
+
             if (batchSize < 1) {
-                Log.Debug("Defaulting to batch size of {0}",1000);
-                batchSize =1000;
+                Log.Debug("Defaulting to batchSize size of {0}", 1000);
+
+                batchSize = 1000;
             }
 
-            //TODO: use batch size
+            Log.Debug("Using batch size: {0}", batchSize);
 
-            var cs = this.Configuration.Dn;
+            var searchBase = this.Configuration.Dn;
             var attrs = this.Configuration.Attributes;
-            string[] attrList = this.Configuration.GetAllAttributes ? null : this.Configuration.Attributes.Keys.ToArray();
-           
+            var targetAttributes = this.Configuration.GetAllAttributes 
+                ? 
+                null 
+                : 
+                this.Configuration.Attributes.Keys.ToArray();
+            var filter = this.Configuration.Query;
+            var scope = LdapConnection.ScopeSub;
+            var searchOptions = new SearchOptions(searchBase, scope, filter, targetAttributes);
+
             using (var cn = new LdapConnection())
             {
-                cn.Connect(server, 389);
-                cn.Bind(uid,pwd);
+                cn.Connect(this._Host, this._Port);
+                cn.Bind(uid, pwd);
 
                 Log.Debug("Connected");
-                var sc = cn.SearchConstraints;
-                sc.BatchSize = batchSize;
-                Log.Debug("Using batch size: {0}",batchSize);
-                var lr = cn.Search(cs, LdapConnection.ScopeSub, this.Configuration.Query, attrList, false);
 
-                while (lr.HasMore())
+                var pageControlHandoer = new SimplePagedResultsControlHandler(cn);
+
+                var ldapEntries = pageControlHandoer.SearchWithSimplePaging(searchOptions, batchSize);
+
+                foreach (var entry in ldapEntries)
                 {
-
-                    var entry = lr.Next();
                     var entrySet = entry.GetAttributeSet();
-                    Log.Debug("Entry: {0}", getEntryAsString(entry));
                     var user = new Dictionary<string,object>(StringComparer.CurrentCultureIgnoreCase);
                     var isValidEntry = false;
+
+                    Log.Debug("Entry: {0}", getEntryAsString(entry));
+                    
                     foreach (var kvp in attrs)
                     {
                         if (!entrySet.ContainsKey(kvp.Key))
                         {
                             continue;
                         }
+
                         var ea = entrySet[kvp.Key];
-                        if (ea == null) continue;
+                        
+                        if (ea == null) {
+                            continue;
+                        }
+
                         user[kvp.Value] = ea.StringValue;
+
                         if (string.IsNullOrEmpty(ea.StringValue) && ea.ByteValue.Length!=0)
                         {
-                             user[kvp.Value] = ea.ByteValue;
+                            user[kvp.Value] = ea.ByteValue;
                         }
+
                         isValidEntry = true;
                     }
+
                     if (isValidEntry)
                     {
                         yield return user;
@@ -81,6 +132,7 @@ namespace LDAPSyncTool
                         Log.Debug("Invalid entry: {0} {1}",entry.Dn ,user.ToJson());
                     }
                 }
+
                 yield break;
             }
         }
