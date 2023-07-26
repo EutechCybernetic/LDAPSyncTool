@@ -33,26 +33,41 @@ namespace LDAPSyncTool
             return result.ToJson();
         }
 
+        /*
+            unsecured
+            
+            ldap.jumpcloud.com
+            ldap.jumpcloud.com:389
+
+            secured
+            
+            ldaps://ldap.jumpcloud.com
+            ldaps://ldap.jumpcloud.com:636
+        */
         static void ParseLDAPServerAddress(string addr, out bool isSecured, out string host, out int port) {
             isSecured = false;
-            host = null;
-            port = 0;
+            host = "localhost";
+            port = 389;
 
             var match = LDAPServerRegex.Match(addr);
 
             if (match.Success) {
                 isSecured = match.Groups[1].Value == "ldaps://";
-                host = !string.IsNullOrWhiteSpace(match.Groups["host"].Value)
-                    ?
-                    match.Groups["host"].Value
-                    :
-                    "localhost";
-                port = !string.IsNullOrWhiteSpace(match.Groups["port"].Value)
-                        && int.TryParse(match.Groups["port"].Value, out int _port)
-                    ? 
-                    _port
-                    :
-                    389;
+                var _host = match.Groups["host"].Value;
+                var _port = match.Groups["port"].Value;
+
+                if (!string.IsNullOrWhiteSpace(_host)) {
+                    host = _host;
+                }
+
+                if (!string.IsNullOrWhiteSpace(_port)) {
+                    if (!int.TryParse(_port, out port)) {
+                        throw new ArgumentException("Not a valid server port");
+                    }
+                }
+                else { // handle "ldaps://ldap.example.com"
+                    port = isSecured ? 636 : port;
+                }
             }
         }
 
@@ -81,7 +96,9 @@ namespace LDAPSyncTool
             var scope = LdapConnection.ScopeSub;
             var searchOptions = new SearchOptions(searchBase, scope, filter, targetAttributes);
 
-            using (var cn = new LdapConnection())
+            using (var cn = new LdapConnection {
+                SecureSocketLayer = this._IsSecured
+            })
             {
                 cn.Connect(this._Host, this._Port);
                 cn.Bind(uid, pwd);
