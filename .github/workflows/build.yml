@@ -2,7 +2,7 @@ name: Build Process
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
