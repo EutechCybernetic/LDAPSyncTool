@@ -7,6 +7,7 @@ This tool is meant to be run within the network where Active Directory is hosted
 This tool is non-interactive and designed to run on a scheduled task.
 
 ## Prerequisites
+
 The following information is required to use this tool:
 
 * `LDAP Server Address` - The ip/host of the active directory or LDAP server to connect to
@@ -19,6 +20,7 @@ The following information is required to use this tool:
 * `iviva Api Key` - The api key used to connect to iviva. You will need to have an API Key issued to you. The API Key should have the `cansyncldapexternal` app role. (In the user roles configuration UI in iviva, look for "Allowed to run an external LDAP sync tool")
 
 ## Configuration
+
 The configuration used by this tool will be read from a YAML file.
 The structure of the yaml file is as follows:
 
@@ -37,35 +39,55 @@ ldap:
 iviva:
     url: https://iviva
     apiKey: SC123:234
-
+pageSize: 10
 ```
 
-Here's what these represent:
+Here's what these represent,
 
 ### ldap.server
-The host/ip of the server to connect to for LDAP or active directory.
+
+The host/ip of the server to connect to for LDAP or active directory. The tool supports the following formats,
+
+For unsecured connection to the server on standard (**389**) or custom port,
+
+- ldap.jumpcloud.com
+- ldap.jumpcloud.com:389
+
+For secured connection to the server on standard (**636**) or custom port,
+
+- ldaps://ldap.jumpcloud.com
+- ldaps://ldap.jumpcloud.com:636
+
+**Note:** Invalid port would lead to `Not a valid server port` error.
 
 ### ldap.dn
+
 The BaseDN that will be used to search for users.
 
 ### ldap.user
+
 The user name to use to connect to LDAP. This will probably have to be a fully qualified expression like `uid=snow,ou=Users,o=orgunitabc,dc=myorg,dc=com`
 
 ### ldap.password
-The password to use to connect to the server. Instead of setting it here - you can override it with an environment variable called `LDAP_SYNC_TOOL_PASSWORD`
 
-The environment variable takes precedence over what is configured here.
+The password to use to connect to the server. Instead of setting it here - you can override it with an environment variable called `LDAP_SYNC_TOOL_PASSWORD`.
+
+**Note:** The environment variable takes precedence over what is configured here.
 
 ### ldap.query
+
 The actual LDAP query to issue to fetch the required users. This query must return all users that need to be synced with iviva
+
 ### ldap.batchSize
-When set, limits the number of items that get fetched on each query.
-Multiple queries will be made until all items are recovered
+
+When set, limits the number of items that get fetched on each query. Multiple queries will be made until all items are recovered
 
 ### ldap.getAllAttributes
+
 When set to true, the query will return all attributes that each user has, regardless of what has been configured in the `attributes` dictionary
 
 ### ldap.attributes
+
 This is a dictionary mapping LDAP attributes to the corresponding iviva attributes.
 Note that `userAccountControl` is always added and you should not have to explicitly map it here.
 
@@ -76,7 +98,7 @@ At the minimum, iviva expects these attributes:
 
 So these 3 need to be mapped to corresponding attributes in ldap.
 
-An example:
+**Example**
 
 ```
 attributes:
@@ -85,17 +107,19 @@ attributes:
     sAMAccountName: LoginID
 ```
 
-This maps the LDAP attribute `mail` to the iviva attribute `Email`.
-The ldap `sAMAAccountName` is the iviva user's LoginID.
+This maps the LDAP attribute `mail` to the iviva attribute `Email`. The ldap `sAMAAccountName` is the iviva user's LoginID.
 
 ### iviva.url
 The full https url of the iviva application to sync users to.
 
-Example: `https://foo.iviva.cloud`
+**Example:** `https://foo.iviva.cloud`
 
 ### iviva.apikey
-The api key to use to talk to the iviva api
+The api key to use to talk to the iviva api.
 
+### pageSize
+
+Number of users to sync to iviva at a time.
 
 ## Usage
 
@@ -106,32 +130,34 @@ To run the tool, specify the path to the configuration file using the `-c` param
 ```
 
 ### Simulation Mode
-You can run the tool in simulation mode - meaning it will query the LDAP/active directory server but not actually send the data to iviva.
-It will log it on the console.
 
-Use the `-s` or `--simulation-mode` command line switch for that:
+You can run the tool in simulation mode - meaning it will query the LDAP/active directory server but not actually send the data to iviva. It will log it on the console.
+
+Use the `-s` or `--simulation-mode` command line switch for that.
 
 ```
 .\LDAPSyncTool.exe -c e:\ldap.yaml --simulation-mode
 ```
 
-
 ## Command Line Options
+
 You can run the tool with the `--help` option to see available command line parameters.
 
 ## Logging
-Currently all log entries are logged to the console (ie, `stdout`).
-You can redirect them to a file as required.
+
+Currently all log entries are logged to the console (ie, `stdout`). You can redirect them to a file as required.
 
 You can use the `-v` or `--verbose` command to log extra information for debugging purposes.
 
 ## Building the code
+
 ### Prerequisites
 You need .NET 6 SDK
 
 ### Building
+
 Clone this repository and run `dotnet publish -c Release --self-contained -r win10-x64 -o <directory-to-publish-to>`
 
 This will create a folder with the `LDAPSyncTool.exe` executable inside it.
 
-Replace `win10-x65` with any runtime identifier from here: https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
+Replace `win10-x64` with any runtime identifier from here: https://docs.microsoft.com/en-us/dotnet/core/rid-catalog.

@@ -78,9 +78,9 @@ namespace LDAPSyncTool
             var batchSize = this.Configuration.BatchSize;
 
             if (batchSize < 1) {
-                Log.Debug("Defaulting to batchSize size of {0}", 1000);
+                Log.Debug("Defaulting to batchSize size of {0}", Constants.DEFAULT_BATCH_SIZE);
 
-                batchSize = 1000;
+                batchSize = Constants.DEFAULT_BATCH_SIZE;
             }
 
             Log.Debug("Using batch size: {0}", batchSize);
